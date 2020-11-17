@@ -19,7 +19,7 @@
 # Version: V 0.1
 # Note: In V 0.1 we use 2d Euclidean distance to represent the distance between two points.
 
-# Reference: Clark and Evans, 1954; Gao, 2013
+# Reference: Clark and Evans, 1954; Gao, 2013; Deng et al., 2011
 
 # **********************************************************************************************************************
 
