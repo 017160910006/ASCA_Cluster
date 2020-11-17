@@ -4,7 +4,18 @@
 # This file is a Spatial point Pattern Analysis Algorithm, and is used for spatial point clustering analysis.
 # And it could be used as assist tool to planning decision of decentralized sewage treatment facilities. This model
 # contains mainly three parts, they are points trend analysis, point cluster analysis and spatial visualization.
-# This algorithm
+
+# MIT License
+
+# Copyright (c) 2020 Shanghai Jiao Tong University
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+# files (the "Software"), to dealin the Software without restriction, including without limitation the rights to use, copy, 
+# modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all copies or substantial 
+# portions of the Software.
 
 #
 # Author: Yuansheng Huang
@@ -23,7 +34,7 @@ import sys
 
 from functions import *
 
-pythonScriptPath = "D:/sourceCode/buildingsClusterAnalysis/pythonFiles01"
+pythonScriptPath = "..../ASC_Cluster"
 
 gc.disable()
 pythonPath = os.getcwd()
