@@ -34,34 +34,29 @@ sys.path.append(pythonScriptPath)
 # 调用ArcGIS界面输入
 # ======================================================================================================================
 arcpy.env.overwriteOutput = True
-buildings = sys.argv[1]  # Building shape file TODO 整合时需修改
+buildings = sys.argv[1]
 studyArea = sys.argv[2]
 obstacleFile = sys.argv[3]
-restrain = int(sys.argv[4])  # 管道长度约束[米]
+restrain = int(sys.argv[4])
 outputFolder = sys.argv[5]
 
 outputFile = outputFolder + "/" + "Cluster.shp"
-addFiledFile = outputFile  # sys.argv[5] + ".shp"
+addFiledFile = outputFile
 
-# ----------------------------------------------------------------------------------------------------------------------
-# 空间点分布模式判定
-# ----------------------------------------------------------------------------------------------------------------------
-pointList, spatialRef = readSpatialPoints(buildings)  # 读取空间点及输入文件的
+
+pointList, spatialRef = readSpatialPoints(buildings) 
 
 distanceList = nearestDistance(pointList)
-area = float(readArea(studyArea))  # 读取研究区域面积
+area = float(readArea(studyArea))
 index, z_test = NNI(pointList, distanceList, area)
-indexList, coordinateList, _, vertexPoints = delaunayTriangle(pointList)  # 核实未使用参数
+indexList, coordinateList, _, vertexPoints = delaunayTriangle(pointList)
 
-# 输出空间点集分布趋势
 arcpy.AddMessage(" ")
 arcpy.AddMessage("************************************")
 arcpy.AddMessage("Points spatial cluster analysis was successfully calculated!!")
 arcpy.AddMessage("NNI index: " + str(index))
 arcpy.AddMessage("Z test: " + str(z_test))
 arcpy.AddMessage("************************************")
-
-# 开始空间点集聚类分析
 
 arcpy.AddMessage(" ")
 arcpy.AddMessage("====================================")
@@ -71,47 +66,41 @@ arcpy.AddMessage(" ")
 
 _, _, edgeList = getTriangleEdge(indexList, coordinateList)
 
-if index >= 1:  # 空间点集呈均匀(>1)/随机分布(=1)
+if index >= 1:
     arcpy.AddMessage("Random distribution OR Uniform distribution (NNI >= 1)")
     arcpy.AddMessage("Skip cluster analysis module and perform edge length limit analysis!!!")
 
-    # 删除障碍不可达边
     obstacleList = readObstacle(obstacleFile)
     reachableEdge = reachable(edgeList, obstacleList, pointList)
     markO = "O"
     _, markedPointO, _ = cluster(vertexPoints, reachableEdge, markO)
     arcpy.AddMessage("Unreachable edges were deleted !!!")
 
-    # 删除限制长边 markedPointO
     unrestrictedEdge = lengthConstraint(edgeList, restrain)
     markC = "C"
     _, markedPointC, _ = cluster(markedPointO, unrestrictedEdge, markC)
     arcpy.AddMessage("Restricted edges were deleted !!!")
 
-    # 结果输出
     createShapeFile(vertexPoints, spatialRef, outputFile)
     addMarkerFields0(outputFile, vertexPoints)
     arcpy.AddMessage("********************************")
     arcpy.AddMessage("Edge length limit analysis was successfully performed!!!")
 
-elif index < 1:  # 空间点集呈聚集分布
+elif index < 1:
     arcpy.AddMessage("Spatial points is aggregated, perform cluster analysis Module!!!")
 
-    # 删除全局长边后的第一阶段聚类
     globalCutList = globalCut(vertexPoints, edgeList)
     otherEdgeList, _ = deleteLongEdge(edgeList, globalCutList)
     markG = "G"
     _, markedPointsG, _ = cluster(vertexPoints, otherEdgeList, markG)
     arcpy.AddMessage("Global long edges were deleted !!!")
 
-    # 删除局部长边边后的第二阶段聚类
     subEdge, subgraphPoint = getSubgraph(otherEdgeList)
     localEdge = deleteLocalLongEdge(subEdge, subgraphPoint)
     markL = "L"
     _, markedPointL, _ = cluster(markedPointsG, localEdge, markL)
     arcpy.AddMessage("Local long edges were deleted !!!")
 
-    # 删除限制长边后的第三阶段聚类
     unrestrictedEdge = lengthConstraint(otherEdgeList, restrain)
     markC = "C"
     _, markedPointC, _ = cluster(markedPointL, unrestrictedEdge, markC)
@@ -123,7 +112,6 @@ elif index < 1:  # 空间点集呈聚集分布
     clusterPointO, markedPointO, _ = cluster(markedPointL, reachableEdge, markO)
     arcpy.AddMessage("Unreachable edges were deleted !!!")
 
-    # 结果输出
     createShapeFile(vertexPoints, spatialRef, outputFile)
     addMarkerFields(outputFile, vertexPoints)
     arcpy.AddMessage("************************************")
