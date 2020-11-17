@@ -4,7 +4,16 @@
 # This file is part of the Spatial point Pattern Analysis Algorithm, and is used for  spatial point clustering analysis.
 # And it could be used as assist tool to planning decision of decentralized sewage treatment facilities. This model
 # contains mainly three parts, they are points trend analysis, point cluster analysis and spatial visualization.
-#
+
+# MIT License
+
+# Copyright (c) 2020 Shanghai Jiao Tong University
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+# files (the "Software"), to dealin the Software without restriction, including without limitation the rights to use, copy, 
+# modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+
 # Author: Yuansheng Huang
 # Date: 2019.09.24
 # Version: V 0.1
@@ -24,19 +33,9 @@ from scipy.spatial import Delaunay
 from functools import cmp_to_key
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# 以下函数用于空间点的趋势分析，采用最邻近指数法
-# ----------------------------------------------------------------------------------------------------------------------
-
 def readArea(areaShape):
     """
     读取shapefile中研究区域的面积
-
-    输入参数
-    areaShape: 研究区域矢量地图，用于读取面积值。
-
-    输出参数
-    area: 研究区域面积
     """
     areaList = []
     rows = arcpy.SearchCursor(areaShape)
@@ -53,14 +52,6 @@ def readArea(areaShape):
 def readSpatialPoints(pointShape):
     """
     读取空间点坐标数据，并保存为列表
-
-    输入参数
-    in_FC: Path to point shapefile
-
-    输出参数
-    pointList: 空间点坐标列表，[[X,Y],...]
-    pX, pY, pZ: X, Y值列表
-    spatialRef: 空间参考
     """
     pointList, rows, fields = [], arcpy.SearchCursor(pointShape), arcpy.ListFields(pointShape)
     spatialRef = arcpy.Describe(pointShape).spatialReference
@@ -80,15 +71,9 @@ def readSpatialPoints(pointShape):
     return pointList, spatialRef
 
 
-def nearestDistance(pointList):  # 增加三维距离算法
+def nearestDistance(pointList):
     """
     此函数用于计算各点到其最近点间的距离，并返回距离列表
-
-    输入参数
-    pointList: 空间点坐标列表，[[X,Y],...]
-
-    输出参数
-    distanceList: 最近距离列表[l1,l2,l3,l4,...]
     """
     distanceList = []
     for i in range(len(pointList)):
@@ -96,8 +81,6 @@ def nearestDistance(pointList):  # 增加三维距离算法
         for j in range(len(pointList)):
             if i != j:
                 length2D = math.hypot(pointList[i][0] - pointList[j][0], pointList[i][1] - pointList[j][1])
-                #heightDiff = pointList[i][2] - pointList[j][2]
-                #length = math.hypot(length2D, heightDiff)
                 pointLength.append(length2D)
             else:
                 continue
@@ -112,18 +95,11 @@ def nearestDistance(pointList):  # 增加三维距离算法
 def NNI(pointList, distanceList, area):
     """
     用于计算空间点集的最邻近指数。当NNI>1时，空间点集呈均匀分布，当NNI<1时，空间点集呈聚集分布
-
-    输入参数
-    pointList: 空间点坐标列表，[[X,Y],...]
-
-    输出参数
-    index:  空间点集的最邻近指数
-    z_test: z检验数值
     """
     N = len(pointList)
     ran = 0.5 * math.sqrt(area / N)
 
-    for e in range(len(distanceList)):  # 替换显著差异值
+    for e in range(len(distanceList)):
         if distanceList[e] > np.mean(distanceList):
             distanceList[e] = ran
         else:
@@ -135,11 +111,6 @@ def NNI(pointList, distanceList, area):
     z_test = ((sumD / N) - ran) / SE
     return index, z_test
 
-
-# ----------------------------------------------------------------------------------------------------------------------
-# 以下函数基于Delaunay Triangle对空间点进行初步聚类，即删除DT的全局长边
-# ----------------------------------------------------------------------------------------------------------------------
-
 def getClusterID(pointList):
     """
     获取簇ID号列表，返回一级聚类簇ID和二级聚类簇ID， 用于后续聚类簇的编号
@@ -149,7 +120,7 @@ def getClusterID(pointList):
     return clusterID1, clusterID2
 
 
-def deleteElements(lists):  # todo 删除此函数，用 list(set())代替
+def deleteElements(lists):
     """
     删除列表中重复的元素，返回无重复元素的列表
     """
@@ -160,39 +131,9 @@ def deleteElements(lists):  # todo 删除此函数，用 list(set())代替
     return listX
 
 
-'''
-def pointsClassify(pointsList):
-    """
-    此函数将有相同标记的元素合并为一个子元素
-
-    输入参数
-    pointsList: 每个元素有特殊标记的的列表。
-
-    输出参数
-    classifiedPoints: 按特殊标记分类的点（聚类）。
-    """
-    copyList = copy.deepcopy(pointsList)
-    length = len(copyList)
-    for i in length:
-        for j in length:
-            if i != j and j not in copyList[i]:
-                copyList[i].append(j)
-                j = [0]
-'''
-
-
 def delaunayTriangle(pointList):
     """
     获取空间点集points的Delaunay Triangle (DT) 及DT的顶点索引和坐标。
-
-    输入参数
-    pointList: 空间点坐标列表[[X, Y], ...]
-
-    输出参数
-    indexList: DT顶点索引列表，如[[1,2,3],...]
-    coordinateList: DT顶点坐标列表[[[x1,y1],[x2,y2],[x3,y3]],...]
-    DT: Delaunay Triangle，由SciPy spatial 中的Delaunay得到
-    vertexPoints: points coordinate with ID. [[id1,[x1,y1]],...]，不含重复点   pointList基础上增加索引ID
     """
     points = np.array(pointList)
     DT = Delaunay(points)
@@ -205,7 +146,6 @@ def delaunayTriangle(pointList):
         for j in range(len(a)):
             vertexPointsAll.append([indexList[i][j], a[j]])
     vertexPoints = deleteElements(vertexPointsAll)
-    # vertexPoints = [list(t) for t in set(tuple(i) for i in vertexPointsAll)]
 
     return indexList, coordinateList, DT, vertexPoints
 
@@ -213,12 +153,6 @@ def delaunayTriangle(pointList):
 def getID(a, b):
     """
     根据DT顶点索引生成DT边ID号，只获取一条边的ID号，而非ID列表。
-
-    输入参数
-    a, b: DT顶点索引号
-
-    输出参数
-    edgeID: DT边索引号
     """
     if a == b:
         raise Exception("ERROR: Indexes point to the same point!!!")
@@ -241,15 +175,6 @@ def getIndex(edgeID):
 def getTriangleEdge(indexList, coordinateList):
     """
     获取DT的欧氏距离边长列表，用于计算整体边长均值和整体边长变异。
-
-    输入参数
-    indexList: DT顶点索引列表，如[[1,2,3],...]
-    coordinateList: DT顶点坐标列表[[[x1,y1],[x2,y2],[x3,y3]],...]
-
-    输出参数
-    edgeListTriangle: 所有DT边长列表（每个三角形一个元素）[[[1, 1A, 1B, len1], [2, 2A, 2B, len2], [3, 3A, 3B, len3]],....]
-    edgeListAll: 所有DT边长列表（含重复边，按边列出）[[id, ida,idb,len],...]
-    edgeList: 去除重复的DT边列表（不含重复边）[[id, ida,idb,len],...] id为边编号，ida/idb为边顶点索引号
     """
     edgeListTriangle, edgeListAll, edgeList = [], [], []
     for i in range(len(indexList)):  # 获取edgeListTriangle列表
@@ -258,7 +183,7 @@ def getTriangleEdge(indexList, coordinateList):
         a, b, c = indexI[0], indexI[1], indexI[2]  # index
         m, l, n = indexC[0], indexC[1], indexC[2]  # coordinate
         ID1, ID2, ID3 = getID(a, b), getID(a, c), getID(b, c)  # 获取边的ID号
-        ID1A, ID1B = getIndex(ID1)  # 获取边顶点索引号，与vertexPoints中ID对应
+        ID1A, ID1B = getIndex(ID1)
         ID2A, ID2B = getIndex(ID2)
         ID3A, ID3B = getIndex(ID3)
         len1 = math.hypot(m[0] - l[0], m[1] - l[1])  # 获取边长
@@ -266,42 +191,32 @@ def getTriangleEdge(indexList, coordinateList):
         len3 = math.hypot(l[0] - n[0], l[1] - n[1])
         edgeListTriangle.append([[ID1, ID1A, ID1B, len1], [ID2, ID2A, ID2B, len2], [ID3, ID3A, ID3B, len3]])
 
-    for j in range(len(edgeListTriangle)):  # 获取edgeListAll列表 展开嵌套列表
+    for j in range(len(edgeListTriangle)):
         edge = edgeListTriangle[j]
         for k in range(len(edge)):
             edgeListAll.append(edge[k])
-    edgeList = [list(t) for t in set(tuple(i) for i in edgeListAll)]  # 获取edgeList列表
-    # edgeList = deleteElements(edgeListAll)
+    edgeList = [list(t) for t in set(tuple(i) for i in edgeListAll)] 
     return edgeListTriangle, edgeListAll, edgeList
 
 
 def getNeighbourhood1(vertexPoints, edgeList):
     """
     用于获取vertex的一阶邻域顶点，并返回各点的一阶邻域边长均值（用于计算二阶邻域边长均值）
-
-    输入参数
-    vertexPoints: points coordinate with ID. [[id1,[x1,y1]],...]，不含重复点
-    edgeList: 去除重复的DT边列表（不含重复边）[[id, ida,idb,len],...] id为边编号，ida/idb为边顶点索引号, 由getTriangleEdge函数计算
-
-    输出参数
-    neighbourhood1AVG: 一阶邻域边长均值[[pointID, mean],...]
-    firstOrderPoint: 一阶邻域顶点索引列表[[p1,p2,...pointID,....pn, pointID],...]
     """
-    neighbourhood1AVG = []  # 各点一阶邻域边长均值列表
-    firstOrderPoints = []  # i点一阶邻域点列表 [a,b,c,d....]
-    for i in vertexPoints:  # iteration
+    neighbourhood1AVG = [] 
+    firstOrderPoints = [] 
+    for i in vertexPoints:
         length1 = []  # 一阶邻域边长
         firstPointX = []
-        for j in edgeList:  # iteration
-            if i[0] in j[1:3]:  # 一阶邻域条件：点P的索引i[0]包含在与其相邻边的顶点索引中
+        for j in edgeList:
+            if i[0] in j[1:3]: 
                 length1.append(j[-1])
-                firstPointX.append(j[1])  # 用于计算二阶邻域边长均值
+                firstPointX.append(j[1])
                 firstPointX.append(j[2])
             else:
                 continue
-        # firstPoint = deleteElements(firstPointX)
-        firstPoint = list(set(firstPointX))  # 获取不含重复索引的一阶领域索引列表
-        firstPoint.append(i[0])  # 将i点的索引添加至嵌套字列表的末尾
+        firstPoint = list(set(firstPointX))
+        firstPoint.append(i[0])
         neighbourhood1AVG.append([i[0], np.mean(length1)])
         firstOrderPoints.append(firstPoint)
     return neighbourhood1AVG, firstOrderPoints
@@ -310,30 +225,21 @@ def getNeighbourhood1(vertexPoints, edgeList):
 def getNeighbourhoodX(vertexPoints, edgeList):
     """
     用于获取vertex的一阶邻域顶点，并返回各点的一阶邻域边长均值（用于计算二阶邻域边长均值）
-
-    输入参数
-    vertexPoints: points coordinate with ID. [[id1,[x1,y1]],...]，不含重复点
-    edgeList: 去除重复的DT边列表（不含重复边）[[id, ida,idb,len],...] id为边编号，ida/idb为边顶点索引号, 由getTriangleEdge函数计算
-
-    输出参数
-    neighbourhood1AVG: 一阶邻域边长均值[[pointID, mean],...]
-    firstOrderPoint: 一阶邻域顶点索引列表[[p1,p2,...pointID,....pn, pointID],...]
     """
-    neighbourhood1AVG = []  # 各点一阶邻域边长均值列表
-    firstOrderPoints = []  # i点一阶邻域点列表 [a,b,c,d....]
-    for i in vertexPoints:  # iteration
-        length1 = []  # 一阶邻域边长
+    neighbourhood1AVG = []
+    firstOrderPoints = []
+    for i in vertexPoints:   
+        length1 = []
         firstPointX = []
-        for j in edgeList:  # iteration
-            if i in j[1:3]:  # 一阶邻域条件：点P的索引i[0]包含在与其相邻边的顶点索引中
+        for j in edgeList:   
+            if i in j[1:3]:
                 length1.append(j[-1])
-                firstPointX.extend([j[1], j[2]])  # 用于计算二阶邻域边长均值
+                firstPointX.extend([j[1], j[2]])
                 # firstPointX.append(j[2])
             else:
                 continue
-        # firstPoint = deleteElements(firstPointX)
-        firstPoint = list(set(firstPointX))  # 获取不含重复索引的一阶领域索引列表
-        firstPoint.append(i)  # 将i点的索引添加至嵌套字列表的末尾
+        firstPoint = list(set(firstPointX))  # 
+        firstPoint.append(i)  # 
         neighbourhood1AVG.append([i, np.mean(length1)])
         firstOrderPoints.append(firstPoint)
     return neighbourhood1AVG, firstOrderPoints
@@ -343,24 +249,16 @@ def getNeighbourhood2(vertexPoints, edgeList, firstOrderPoint):
     """
     获取vertexPoints列表各点的二阶邻域边长均值，任意点P的一阶邻域点的各条边包含点P二阶邻域边和点P一阶邻域三角形的所有边。所以计算二阶
     邻域时，先求点P所有一阶邻域点的所有边，再取相互不重复的边即可。
-
-    输入参数
-    vertexPoints: points coordinate with ID. [[id1,[x1,y1]],...]，不含重复点
-    edgeList: 去除重复的DT边列表（不含重复边）[[id, ida,idb,len],...] id为边编号，ida/idb为边顶点索引号
-    firstOrderPoint: 一阶邻域顶点列表[[p1,p2,...pointID,....pn, pointID],...]
-
-    输出参数
-    neighbourhood2AVG: 二阶邻域边长均值[[pointID, mean],...]
     """
     neighbourhood2AVG = []
-    for i in vertexPoints:  # 迭代顶点
+    for i in vertexPoints:  # 
         secondPoint = []
         edge = []
         length2 = []
-        for j in firstOrderPoint:  # 获取i点的一阶邻域点
+        for j in firstOrderPoint:  # 
             if i[0] == j[-1]:
                 secondPoint = j[:-1]
-        for a in secondPoint:  # 获取i点所有一阶邻域点的一阶邻域边
+        for a in secondPoint:  # 
             for b in edgeList:
                 if a in b:
                     edge.append([a, b])  # [[a,[id,a,b,len]],...]
@@ -387,13 +285,6 @@ def calcGlobalStatistic(edgeList):
 def globalCut(vertexPoints, edgeList):
     """
     获取各顶点的全局约束值
-
-    输入参数
-    vertexPoints: points coordinate with ID. [[1,[x1,y1]],...]，不含重复点
-    edgeList: 去除重复的DT边列表（不含重复边）[[id, ida,idb,len],...] id为边编号，ida/idb为边顶点索引号, 由getTriangleEdge函数计算
-
-    输出参数
-    globalCutList: 全局约束列表[pointIndex, cutValue],...]
     """
     globalAVG, globalSTD = calcGlobalStatistic(edgeList)
     firstOrderEdgeAVG, _ = getNeighbourhood1(vertexPoints, edgeList)  # todo
@@ -413,41 +304,23 @@ def globalCut(vertexPoints, edgeList):
 def deleteLongEdge(edgeList, globalCutList):  # TODO
     """
     删除全局长边，并返回全局长边和全局其他边列表
-
-    输入参数
-    edgeList: 去除重复的DT边列表（不含重复边）[[id, ida,idb,len],...] id为边编号，ida/idb为边顶点索引号, 由getTriangleEdge函数计算
-    globalCutList: 全局约束列表[pointIndex, cutValue],...]
-
-    输出参数
-    otherEdgeList，longEdgeList: 全局短边，全局长边
     """
     otherEdgeListX, longEdgeListX = [], []
     for i in globalCutList:
-        for j in edgeList:  # 获取各顶点的other edges
+        for j in edgeList:  #  edges
             if i[0] in j and i[1] > j[-1]:  # todo
                 otherEdgeListX.append(j)
             if i[0] in j and i[1] <= j[-1]:
                 longEdgeListX.append(j)
 
-    otherEdgeList = [list(t) for t in set(tuple(i) for i in otherEdgeListX)]  # 去除列表中重复元素
+    otherEdgeList = [list(t) for t in set(tuple(i) for i in otherEdgeListX)]  # 
     longEdgeList = [list(t) for t in set(tuple(i) for i in longEdgeListX)]
-    # otherEdgeList = deleteElements(otherEdgeListX)
-    # longEdgeList = deleteElements(longEdgeListX)
     return otherEdgeList, longEdgeList
 
 
 def getIsolatedPoints(vertexPoints, otherEdgeList, mark):
     """
     用于获取空间点集中的孤立点，并给每个点增加标记，在cluster函数中调用。
-
-    输入参数
-    vertexPoints: points coordinate with ID. [[1,[x1,y1]],...]，不含重复点
-    otherEdgeList: 删除全局长边后的Delaunay三角网格边长[[id, ida,idb,len],...] id为边编号，ida/idb为边顶点索引号
-    mark: 用于区分点簇的标记
-
-    输出参数
-    otherPointsList: 非孤立点
-    isolatedPoints: 孤立空间点列表。[[1,[x1,y1]，mark], []...]
     """
     markerA = mark + str(0)
     other, isolate = [], []
@@ -459,8 +332,6 @@ def getIsolatedPoints(vertexPoints, otherEdgeList, mark):
             else:
                 continue
         otherPointsList = deleteElements(other)
-        # otherPointsList = [list(t) for t in set(tuple(i) for i in other)]
-        # isolatePointList = [list(t) for t in set(tuple(i) for i in isolate)]
     for j in vertexPoints:
         if j not in otherPointsList:
             isolate.append(j)
@@ -477,12 +348,6 @@ def aggregation(pointList):
     """
     用于获取孤立点以外的其他点所构成的点簇，每个点簇所包含的点为一个元素。在cluster函数中调用。
     此函数将嵌套列表中有相同元素的子列表合并，并将索引号较小的一个元素设置为两个子元素的并，较大一个设置为空列表[]。
-
-    输入参数
-    pointsList: 嵌套列表
-
-    输出参数
-    mergedPoint: 合并后的列表
     """
     for i in range(len(pointList)):
         for j in range(len(pointList)):
@@ -506,14 +371,6 @@ def aggregation(pointList):
 def markPoint(indexList, vertexPoints, mark):
     """
     用于标记各点簇中的空间点，将标记添加至最后列表末尾
-
-    输入参数
-    indexList: 各点簇空间点所对应的的ID号
-    vertexPoints: 各空间点的空间空间二维坐标
-    mark: 标记
-
-    输出参数
-    clusterPoints, markedPoints:
     """
     clusterPoints, markedPoints = [], []
     for i in vertexPoints:
@@ -535,27 +392,17 @@ def markPoint(indexList, vertexPoints, mark):
 def cluster(vertexPoints, otherEdgeList, mark):
     """
     根据全局其他边，初步聚类，给个点添加簇标号，并以列表的形式返回（嵌套列表，在之前vertexPoint的基础上每个元素的末尾添加标识。
-
-    输入参数
-    vertexPoints: points coordinate with ID. [[1,[x1,y1]],...]，不含重复点
-    otherEdgeList: 删除全局长边后的Delaunay三角网格边长[[id, ida,idb,len],...] id为边编号，ida/idb为边顶点索引号
-    mark: 用于区分点簇的标记
-
-    输出参数
-    clusterPoints: 删除全局长边后点簇，各点有簇标记，每个元素为一个点簇
-    markedPoints: 数据同clusterPoints，数据结构变动，
     """
-    # 获取孤立点
     isolatePointList, otherPointsList = getIsolatedPoints(vertexPoints, otherEdgeList, mark)
 
     _, firstOrder = getNeighbourhood1(otherPointsList, otherEdgeList)  # 索引列表
-    firstOrderPoints = []  # 获取其他点（不包含孤立点）的一阶邻域点索引
+    firstOrderPoints = []  
     usedPoint = firstOrder  # copy.deepcopy(firstOrder)
     for i in usedPoint:
         a = i[:-1]
         firstOrderPoints.append(a)
 
-    mergedPoints = aggregation(firstOrderPoints)  # 一个点簇点的索引号为字列表的列表
+    mergedPoints = aggregation(firstOrderPoints)  
 
     clusterPoint, markedPoint = markPoint(mergedPoints, vertexPoints, mark)
     clusterPoints = clusterPoint + isolatePointList
@@ -563,19 +410,9 @@ def cluster(vertexPoints, otherEdgeList, mark):
     return clusterPoints, markedPoints, firstOrderPoints
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# 以下函数用于空间叠置分析。基于向量旋转角的二维线段相交判定
-# ----------------------------------------------------------------------------------------------------------------------
-
 def readObstacle(obstacle):
     """
     从shapefile线数据中读取研究区域的空间障碍（线段）的起始点坐标，用于删除DT边列表中与障碍线段相交的边。
-
-    输入参数：
-    obstacle: 空间障碍shapefile数据，将所有需考虑的障碍（道路，河流，分水岭等）合并为一个文件，且需在vertex处打断障碍以得到起始点坐标。
-
-    输出参数
-    obstacleList: 障碍列表[[[Sx1, Sy1],[Ex1, Ey1]], ...]
     """
     obstacleList, rows, fields = [], arcpy.SearchCursor(obstacle), arcpy.ListFields(obstacle)
     for row in rows:  # Iterate shapefile
@@ -659,7 +496,7 @@ class SegmentsIntersect(object):
 
 def vectorAngle(edge, point):
     """
-     输入参数
+    输入参数
     edge: DT边或空间障碍边 [[startx, starty], [endx, endy]]
     point: 空间障碍边或DT边的起/始点坐标[x, y]
 
@@ -680,13 +517,6 @@ def vectorAngle(edge, point):
 def intersectTest(edge1, edge2):
     """
     计算二维空间线段edge1和edge2是否相交。1--相交；0--不相交
-
-    输入参数
-    edge1: DT边 [[startx, starty], [endx, endy]]
-    edge2: 空间障碍（用线段表示）[[startX, startY], [endX, endY]]
-
-    输出参数
-    result: 判断结构，1--相交；0--不相交
     """
     if max(edge1[0][0], edge1[1][0]) >= min(edge2[0][0], edge2[1][0]) and \
        max(edge2[0][0], edge2[1][0]) >= min(edge1[0][0], edge1[1][0]) and \
@@ -716,12 +546,7 @@ def reachable(otherEdgeList, obstacleList, pointList):
     reachableEdge: 删除不可达边后的DT边，数据结构同otherEdgeList
     """
     triangleEdge = []
-    for edge in otherEdgeList:  # 读取DT边的端点坐标，并存放在列表triangleEdge中，数据结构同obstacleList
-        # start_end = []
-        # for ID in edge[1:3]:
-        # for point in markedPoints:
-        # for ID in edge[1:3]:
-        # start_end.append([start, end])
+    for edge in otherEdgeList:
         start = pointList[edge[1]]
         end = pointList[edge[2]]
         triangleEdge.append([start, end])
@@ -729,8 +554,6 @@ def reachable(otherEdgeList, obstacleList, pointList):
     unreach, reach, reachableEdge = [], [], []
     for i in obstacleList:  # 获取可达边，存放在reachable列表[[[Sx1, Sy1],[Ex1, Ey1]], ...]
         for j in triangleEdge:
-            # intersect = intersectTest(triangleEdge[j], obstacleList[i])
-            # intersect = SegmentsIntersect(A, B, C, D).result
             intersect = SegmentsIntersect(j[0], j[1], i[0], i[1]).result
             if intersect == 1 and j not in unreach:
                 unreach.append(j)
@@ -762,21 +585,10 @@ def listTest(testList, listName):
     return
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# 以下函数用于删除局部长边
-# ......................................................................................................................
-
 def getSubgraph(reachableEdge):  # todo 输出有误
     """
     用于获取删除全局长边和障碍边后的所有子图，每个子图为一个元素，每个元素包含子图所有的边/顶点。
     subgraphEdge, subgraphPoint列表中相同索引号对应同一子图。
-
-    输入参数
-    reachableEdge: 删除不可达边后的DT边，数据结构同otherEdgeList [[id, ida,idb,len],...]
-
-    输出参数
-    subgraphEdge: 子图边列表[[[id, ida,idb,len],[id, ida,idb,len],...],[...],...]
-    subgraphPoint: 子图顶点列表[[p1,p2,p3,...],[...],...]
     """
     localEdgeSTD, subgraphEdge, subgraphPoint = [], [], []
     merge = []
@@ -791,9 +603,7 @@ def getSubgraph(reachableEdge):  # todo 输出有误
             for e in reachableEdge:
                 if e[2] == i or e[1] == i:
                     subgraphEdgeX.append(e)
-                    subgraphPointX.extend([e[1], e[2]])  # INDEX
-                    # subgraphPointX.append(e[2])
-        # edges = deleteElements(subgraphEdgeX)  # 子图边
+                    subgraphPointX.extend([e[1], e[2]])
         points = deleteElements(subgraphPointX)  # 子图顶点
         edges = [list(t) for t in set(tuple(i) for i in subgraphEdgeX)]
         # points = [list(t) for t in set(tuple(i) for i in subgraphPointX)]
@@ -805,26 +615,17 @@ def getSubgraph(reachableEdge):  # todo 输出有误
 def deleteLocalLongEdge(subgraphEdge, subgraphPoint):
     """
     用于删除每个子图的局部长边，并返回余下的DT边列表
-
-    输入参数
-    subgraphEdge: 子图边列表[[[id, ida,idb,len],[id, ida,idb,len],...],[...],...]
-    subgraphPoint: 子图顶点列表[[p1,p2,p3,...],[...],...]
-
-    输出参数
-    localEdge: 删除局部长边后DT边列表。[[id, ida,idb,len],...]
     """
     localEdgeX, edges = [], []
-    for i in range(len(subgraphPoint)):  # 迭代子图
-        graphEdge = subgraphEdge[i]  # 子图的所有边[[id, ida,idb,len],[id, ida,idb,len],...]
+    for i in range(len(subgraphPoint)):
+        graphEdge = subgraphEdge[i]
         edgeLength = []
         for E in graphEdge:  # 获取子图的边长变异
             edgeLength.append(E[-1])
             localSTD = np.std(edgeLength)
             localAVG = np.mean(edgeLength)
 
-        # 计算子图顶点的二阶邻域边长均值
         subMeans1, _ = getNeighbourhoodX(subgraphPoint[i], subgraphEdge[i])
-        # mean2 = getNeighbourhood2(subgraphPoint[i], subgraphEdge[i], firstOrderPoint)
 
         cutValueList = []
         for a in subgraphPoint[i]:  # 获取子图个顶点的约束准则，并生成列表[[pointIndexID, value],...]
@@ -855,40 +656,16 @@ def deleteLocalLongEdge(subgraphEdge, subgraphPoint):
     return localEdge
 
 
-# ......................................................................................................................
-# 以下函数用于最长边限定（不考虑颈、链问题），考虑到农村地区的自然社会特点，将边长上限设定为300米
-# ......................................................................................................................
-
 def lengthConstraint(localEdge, constraint):
     """
     用于限制边的长度，超过限定值得边将被打断。
-
-    输入参数
-    localEdge: 删除局部长边后DT边列表。[[id, ida,idb,len],...]
-    constraint: DT边限制长度，米。
-
-    输出参数
-    unrestrictedEdge: 删除限制边后的DT边。[[id, ida,idb,len],...]
     """
-    unrestrictedEdge = [i for i in localEdge if i[-1] < constraint]
-    # for i in localEdge:
-    #     if i[-1] < constraint:
-    #         unrestrictedEdge.append(i)
-    return unrestrictedEdge
+    return [i for i in localEdge if i[-1] < constraint]
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# 以下函数用于ArcGIS界面的可视化
-# ----------------------------------------------------------------------------------------------------------------------
-def createShapeFile(markedPoint, spatialRef, output):  # 无法写入ID号
-
+def createShapeFile(markedPoint, spatialRef, output):
     """
     根据坐标点列表创建point文件，并为其设定坐标参考。
-
-    输入参数
-    pointList: 空间点坐标列表，[[X,Y],...]
-    spatialRef: 空间参考
-    output: 文件输出位置及名称
     """
     point = arcpy.Point()
     pointGeometryList = []
@@ -907,10 +684,6 @@ def createShapeFile(markedPoint, spatialRef, output):  # 无法写入ID号
 def addMarkerFields(fileName, markedPoint):
     """
     给输出shape文件增加字段
-
-    输入参数
-    fileName: 需增加字段的文件名称及路径
-    markedPoint: points coordinate with ID and markerS. [[index, [x, y], A1, B1],[index, [x, y], A2, B1],...]
     """
     arcpy.AddField_management(fileName, "ID_T", "FLOAT")
     arcpy.AddField_management(fileName, "mark1", "TEXT")  # global
@@ -933,10 +706,6 @@ def addMarkerFields(fileName, markedPoint):
 def addMarkerFields0(fileName, markedPoint):
     """
     给输出shape文件增加字段
-
-    输入参数
-    fileName: 需增加字段的文件名称及路径
-    markedPoint: points coordinate with ID and markerS. [[index, [x, y], A1, B1],[index, [x, y], A2, B1],...]
     """
     arcpy.AddField_management(fileName, "ID_T", "FLOAT")
     arcpy.AddField_management(fileName, "mark2", "TEXT")  # obstacle
