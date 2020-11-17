@@ -4,9 +4,11 @@
 # This file is a Spatial point Pattern Analysis Algorithm, and is used for spatial point clustering analysis.
 # And it could be used as assist tool to planning decision of decentralized sewage treatment facilities. This model
 # contains mainly three parts, they are points trend analysis, point cluster analysis and spatial visualization.
-# This algorithm
+
+# Copyright (c) 2020 Shanghai Jiao Tong University
 
 #
+
 # Author: Yuansheng Huang
 # Date: 2019.09.24
 # Version: V 0.1
